@@ -1,9 +1,40 @@
-# Minecraft Patch Note Maker 1.1
-
 import json
 import zipfile
 import click
+import time
+import os
+import shutil
 from tkinter import Tk, filedialog
+
+clear = lambda: os.system('cls')
+app_version = "1.2"
+
+def fit_terminal(min_cols=120, min_lines=30):
+    try:
+        size = shutil.get_terminal_size()
+        cols, lines = size.columns, size.lines
+
+        if cols < min_cols or lines < min_lines:
+            os.system(f"mode con: cols={min_cols} lines={min_lines}")
+    except:
+        pass
+
+
+fit_terminal(130, 35)
+
+print(fr"""
+  __  __ _                            __ _     _____      _       _       _   _       _         __  __       _             
+ |  \/  (_)                          / _| |   |  __ \    | |     | |     | \ | |     | |       |  \/  |     | |            
+ | \  / |_ _ __   ___  ___ _ __ __ _| |_| |_  | |__) |_ _| |_ ___| |__   |  \| | ___ | |_ ___  | \  / | __ _| | _____ _ __ 
+ | |\/| | | '_ \ / _ \/ __| '__/ _` |  _| __| |  ___/ _` | __/ __| '_ \  | . ` |/ _ \| __/ _ \ | |\/| |/ _` | |/ / _ \ '__|
+ | |  | | | | | |  __/ (__| | | (_| | | | |_  | |  | (_| | || (__| | | | | |\  | (_) | ||  __/ | |  | | (_| |   <  __/ |   
+ |_|  |_|_|_| |_|\___|\___|_|  \__,_|_|  \__| |_|   \__,_|\__\___|_| |_| |_| \_|\___/ \__\___| |_|  |_|\__,_|_|\_\___|_|   {app_version}
+
+    Being a lazy dev has never being this easy!
+      """)
+
+time.sleep(2)
+clear()
 
 def parse_version(version):
     try:
