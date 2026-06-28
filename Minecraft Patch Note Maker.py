@@ -1,4 +1,4 @@
-# Minecraft Patch Note Maker 1.0
+# Minecraft Patch Note Maker 1.1
 
 import json
 import zipfile
@@ -106,15 +106,15 @@ else:
 # --- display ---
 print("\n=== MODS ADDED ===")
 for m in added:
-    print(f"+ {m[0]} ({m[1]})")
+    print(f"+ {m[0]} ({m[1]})\n")
 
 print("\n=== DELETED MODS ===")
 for m in removed:
-    print(f"- {m[0]} ({m[1]})")
+    print(f"- {m[0]} ({m[1]})\n")
 
 print("\n=== UPDATED MODS ===")
 for m in updated:
-    print(f"↑ {m[0]} : {m[1]} → {m[2]}")
+    print(f"↑ {m[0]} : {m[1]} → {m[2]}\n")
 
 print("=== DEV NOTE ===")
 if dev_not_bool == True:
