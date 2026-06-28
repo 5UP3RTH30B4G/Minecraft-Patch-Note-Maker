@@ -14,11 +14,11 @@ This tool automatically compares two **mods** folders and generates a clean chan
 
 ### Detects
 
-* + Newly added mods
-* - Removed mods
-* ↑ Updated mod versions
-*   Custom developer notes
-*   Ready-to-publish patch notes
+* Newly added mods
+* Removed mods
+* Updated mod versions
+* Custom developer notes
+* Ready-to-publish patch notes
 
 ---
 
