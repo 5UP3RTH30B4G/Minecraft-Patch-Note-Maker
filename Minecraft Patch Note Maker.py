@@ -3,10 +3,24 @@ import zipfile
 import click
 import time
 import os
+import shutil
 from tkinter import Tk, filedialog
 
 clear = lambda: os.system('cls')
 app_version = "1.2"
+
+def fit_terminal(min_cols=120, min_lines=30):
+    try:
+        size = shutil.get_terminal_size()
+        cols, lines = size.columns, size.lines
+
+        if cols < min_cols or lines < min_lines:
+            os.system(f"mode con: cols={min_cols} lines={min_lines}")
+    except:
+        pass
+
+
+fit_terminal(130, 35)
 
 print(fr"""
   __  __ _                            __ _     _____      _       _       _   _       _         __  __       _             
