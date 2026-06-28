@@ -1,10 +1,11 @@
-# Minecraft Patch Note Maker 1.2
-
 import json
 import zipfile
 import click
+import time
+import os
 from tkinter import Tk, filedialog
 
+clear = lambda: os.system('cls')
 app_version = "1.2"
 
 print(fr"""
@@ -17,6 +18,9 @@ print(fr"""
 
     Being a lazy dev has never being this easy!
       """)
+
+time.sleep(2)
+clear()
 
 def parse_version(version):
     try:
