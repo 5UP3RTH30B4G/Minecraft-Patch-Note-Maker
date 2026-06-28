@@ -1,4 +1,4 @@
-# 📋 Minecraft Modpack Patch Note Generator
+# Minecraft Modpack Patch Note Generator
 
 > Being a lazy dev has never being this easy!
 
