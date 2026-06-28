@@ -1,3 +1,5 @@
+# Minecraft Patch Note Maker 1.0
+
 import json
 import zipfile
 import click
