@@ -106,17 +106,17 @@ else:
 # --- display ---
 print("\n=== MODS ADDED ===")
 for m in added:
-    print(f"+ {m[0]} ({m[1]})\n")
+    print(f"+ {m[0]} ({m[1]})")
 
 print("\n=== DELETED MODS ===")
 for m in removed:
-    print(f"- {m[0]} ({m[1]})\n")
+    print(f"- {m[0]} ({m[1]})")
 
 print("\n=== UPDATED MODS ===")
 for m in updated:
-    print(f"↑ {m[0]} : {m[1]} → {m[2]}\n")
+    print(f"↑ {m[0]} : {m[1]} → {m[2]}")
 
-print("=== DEV NOTE ===")
+print("\n=== DEV NOTE ===")
 if dev_not_bool == True:
     print(dev_not)
 else :
