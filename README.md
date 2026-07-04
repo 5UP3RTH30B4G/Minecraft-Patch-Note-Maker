@@ -18,6 +18,7 @@ This tool automatically compares two **mods** folders and generates a clean chan
 * Newly added mods
 * Removed mods
 * Updated mod versions
+* Minecraft version change detection between old and new modsets
 * Custom developer notes
 * Ready-to-publish patch notes
 
@@ -26,6 +27,9 @@ This tool automatically compares two **mods** folders and generates a clean chan
 ## Example Output
 
 ```text
+=== MINECRAFT VERSION ===
+1.20.1 → 1.21.1
+
 === MODS ADDED ===
 + Voxy Server Side (0.2.2)
 + Chunky Pregenerator (2.2.0)
@@ -63,7 +67,8 @@ This tool automatically compares two **mods** folders and generates a clean chan
 2. Select the **new** modpack `mods` folder.
 3. The program scans every `.jar` file.
 4. It reads each mod's metadata and version.
-5. A complete patch note is generated automatically.
+5. The tool detects whether the Minecraft version changed and adds it to the output.
+6. A complete patch note is generated automatically.
 
 No manual editing required.
 
