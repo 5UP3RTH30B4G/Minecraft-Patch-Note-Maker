@@ -104,6 +104,100 @@ def _extract_version_from_filename(jar_path):
     return ""
 
 
+def _extract_minecraft_version_from_range(version_range):
+    if not version_range:
+        return ""
+
+    cleaned = str(version_range).strip().strip('"\'')
+    if not cleaned:
+        return ""
+
+    cleaned = cleaned.lstrip("[<(\"").rstrip(">)]")
+    candidates = [part.strip() for part in cleaned.split(",") if part.strip()]
+    if not candidates:
+        return ""
+
+    first_value = candidates[0]
+    version_match = re.search(r"\d+(?:\.\d+)+", first_value)
+    if version_match:
+        return version_match.group(0)
+
+    return ""
+
+
+def _extract_minecraft_version_from_toml(text):
+    current_dependency = None
+    for line in text.splitlines():
+        line = line.strip()
+        line = line.split("#", 1)[0].strip()
+
+        if line.startswith("[[") and line.endswith("]]" ):
+            current_dependency = None
+            continue
+
+        if line.startswith("modId"):
+            value = _extract_toml_value(line)
+            if value == "minecraft":
+                current_dependency = "minecraft"
+            else:
+                current_dependency = None
+            continue
+
+        if current_dependency == "minecraft" and line.startswith("versionRange"):
+            return _extract_minecraft_version_from_range(_extract_toml_value(line))
+
+    return ""
+
+
+def _extract_minecraft_version_from_mcmod_info(jar_path):
+    try:
+        with zipfile.ZipFile(jar_path, "r") as jar:
+            for entry in ("mcmod.info", "mcmod.info.json"):
+                if entry in jar.namelist():
+                    with jar.open(entry) as f:
+                        data = json.load(f)
+
+                    if isinstance(data, list) and data:
+                        data = data[0]
+
+                    if isinstance(data, dict):
+                        return data.get("mcversion") or ""
+    except Exception:
+        return ""
+
+
+def _extract_minecraft_version_from_filename(jar_path):
+    basename = os.path.basename(jar_path).lower()
+    match = re.search(r"mc(?:raft)?[-_.]?([0-9]+(?:\.[0-9]+){1,2})", basename)
+    if match:
+        return match.group(1)
+
+    match = re.search(r"(?<!\d)(1\.\d+(?:\.\d+)?)(?!\d)", basename)
+    if match:
+        return match.group(1)
+
+    return ""
+
+
+def get_minecraft_version(jar_path):
+    try:
+        with zipfile.ZipFile(jar_path, "r") as jar:
+            if "META-INF/mods.toml" in jar.namelist():
+                with jar.open("META-INF/mods.toml") as f:
+                    text = f.read().decode("utf-8", errors="ignore")
+                version = _extract_minecraft_version_from_toml(text)
+                if version:
+                    return version
+
+            mcmod_version = _extract_minecraft_version_from_mcmod_info(jar_path)
+            if mcmod_version:
+                return mcmod_version
+
+            return _extract_minecraft_version_from_filename(jar_path)
+    except Exception:
+        return _extract_minecraft_version_from_filename(jar_path)
+
+
 def _resolve_metadata_value(raw_value, jar_path, mod_id="", display_name=""):
     value = str(raw_value or "").strip().strip('"\'')
     if not value:
@@ -250,6 +344,19 @@ jar_files_new = filedialog.askopenfilenames(
 old_mods = build_mod_dict(jar_files_old)
 new_mods = build_mod_dict(jar_files_new)
 
+old_mc_version = ""
+new_mc_version = ""
+
+for jar in jar_files_old:
+    old_mc_version = get_minecraft_version(jar)
+    if old_mc_version:
+        break
+
+for jar in jar_files_new:
+    new_mc_version = get_minecraft_version(jar)
+    if new_mc_version:
+        break
+
 added = []
 removed = []
 updated = []
@@ -277,19 +384,28 @@ else:
     dev_not_bool = False
 
 # --- display ---
-print("\n=== MODS ADDED ===")
+if old_mc_version and new_mc_version:
+    if old_mc_version != new_mc_version:
+        print("\n# === MINECRAFT VERSION ===")
+        print(f"{old_mc_version} → {new_mc_version}")
+    else:
+        print(new_mc_version)
+else:
+    print("Version inconnue")
+
+print("\n# === MODS ADDED ===")
 for m in added:
     print(f"+ {m[0]} ({m[1]})")
 
-print("\n=== DELETED MODS ===")
+print("\n# === DELETED MODS ===")
 for m in removed:
     print(f"- {m[0]} ({m[1]})")
 
-print("\n=== UPDATED MODS ===")
+print("\n# === UPDATED MODS ===")
 for m in updated:
-    print(f"↑ {m[0]} : {m[1]} → {m[2]}")
+    print(f"+ {m[0]} : {m[1]} → {m[2]}")
 
-print("\n=== DEV NOTE ===")
+print("\n# === DEV NOTE ===")
 if dev_not_bool == True:
     print(dev_not)
 else :
