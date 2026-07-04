@@ -152,3 +152,5 @@ if dev_not_bool == True:
     print(dev_not)
 else :
     print("No note added.")
+
+click.confirm("\nPress Enter to exit.", default=True)
