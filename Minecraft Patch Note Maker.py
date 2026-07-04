@@ -153,4 +153,4 @@ if dev_not_bool == True:
 else :
     print("No note added.")
 
-click.confirm("\nPress Enter to exit.", default=True)
+input("\nPress Enter to exit...")
