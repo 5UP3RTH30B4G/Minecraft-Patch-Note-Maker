@@ -5,10 +5,11 @@ import click
 import time
 import os
 import shutil
+from collections import Counter
 from tkinter import Tk, filedialog
 
 clear = lambda: os.system('cls')
-app_version = "1.3"
+app_version = "1.4"
 
 def fit_terminal(min_cols=120, min_lines=30):
     try:
@@ -16,7 +17,7 @@ def fit_terminal(min_cols=120, min_lines=30):
         cols, lines = size.columns, size.lines
 
         if cols < min_cols or lines < min_lines:
-            os.system(f"mode con: cols={min_cols} lines={min_lines}")
+            os.system(f"mode con: cols={min_cols} lines=999")
     except:
         pass
 
@@ -165,13 +166,43 @@ def _extract_minecraft_version_from_mcmod_info(jar_path):
     except Exception:
         return ""
 
+    return ""
+
+
+def _extract_minecraft_version_from_fabric_json(jar):
+    try:
+        namelist = [name for name in jar.namelist()]
+        target_files = [name for name in namelist if name.lower().endswith("fabric.mod.json") or name.lower().endswith("quilt.mod.json")]
+        if not target_files:
+            return ""
+
+        with jar.open(target_files[0]) as f:
+            data = json.load(f)
+
+        for section in ("depends", "breaks", "suggests"):
+            value = data.get(section)
+            if isinstance(value, dict) and "minecraft" in value:
+                return _extract_minecraft_version_from_range(value["minecraft"]) or str(value["minecraft"]).strip()
+
+        return ""
+    except Exception:
+        return ""
+
 
 def _extract_minecraft_version_from_filename(jar_path):
     basename = os.path.basename(jar_path).lower()
-    match = re.search(r"mc(?:raft)?[-_.]?([0-9]+(?:\.[0-9]+){1,2})", basename)
-    if match:
-        return match.group(1)
 
+    # Prefer explicit Minecraft version markers such as mc1.21.11 or minecraft-1.21.11.
+    mc_match = re.search(r"mc(?:raft)?[-_.]?([0-9]+(?:\.[0-9]+){1,2})", basename)
+    if mc_match:
+        return mc_match.group(1)
+
+    # If the filename uses a mod version + mc version pattern, use the last numeric version after a plus sign.
+    plus_matches = re.findall(r"\+([0-9]+(?:\.[0-9]+){1,2})", basename)
+    if plus_matches:
+        return plus_matches[-1]
+
+    # Fall back to any standalone 1.x version if explicit mc markers are missing.
     match = re.search(r"(?<!\d)(1\.\d+(?:\.\d+)?)(?!\d)", basename)
     if match:
         return match.group(1)
@@ -189,6 +220,10 @@ def get_minecraft_version(jar_path):
                 if version:
                     return version
 
+            fabric_version = _extract_minecraft_version_from_fabric_json(jar)
+            if fabric_version:
+                return fabric_version
+
             mcmod_version = _extract_minecraft_version_from_mcmod_info(jar_path)
             if mcmod_version:
                 return mcmod_version
@@ -196,6 +231,20 @@ def get_minecraft_version(jar_path):
             return _extract_minecraft_version_from_filename(jar_path)
     except Exception:
         return _extract_minecraft_version_from_filename(jar_path)
+
+
+def infer_minecraft_version(jar_files):
+    versions = []
+    for jar in jar_files:
+        version = get_minecraft_version(jar)
+        if version:
+            versions.append(version)
+
+    if not versions:
+        return ""
+
+    most_common_version, _ = Counter(versions).most_common(1)[0]
+    return most_common_version
 
 
 def _resolve_metadata_value(raw_value, jar_path, mod_id="", display_name=""):
@@ -347,15 +396,8 @@ new_mods = build_mod_dict(jar_files_new)
 old_mc_version = ""
 new_mc_version = ""
 
-for jar in jar_files_old:
-    old_mc_version = get_minecraft_version(jar)
-    if old_mc_version:
-        break
-
-for jar in jar_files_new:
-    new_mc_version = get_minecraft_version(jar)
-    if new_mc_version:
-        break
+old_mc_version = infer_minecraft_version(jar_files_old)
+new_mc_version = infer_minecraft_version(jar_files_new)
 
 added = []
 removed = []
@@ -384,28 +426,37 @@ else:
     dev_not_bool = False
 
 # --- display ---
+print("\n# === MINECRAFT VERSION ===")
 if old_mc_version and new_mc_version:
     if old_mc_version != new_mc_version:
-        print("\n# === MINECRAFT VERSION ===")
         print(f"{old_mc_version} → {new_mc_version}")
     else:
         print(new_mc_version)
 else:
-    print("Version inconnue")
+    print("Unable to determine Minecraft version.")
 
-print("\n# === MODS ADDED ===")
-for m in added:
-    print(f"+ {m[0]} ({m[1]})")
+print("\n## === MODS ADDED ===")
+if added:
+    for m in added:
+        print(f"+ {m[0]} ({m[1]})")
+else:
+    print("No mods added.")
 
-print("\n# === DELETED MODS ===")
-for m in removed:
-    print(f"- {m[0]} ({m[1]})")
+print("\n## === DELETED MODS ===")
+if removed:
+    for m in removed:
+        print(f"- {m[0]} ({m[1]})")
+else:
+    print("No mods deleted.")
 
-print("\n# === UPDATED MODS ===")
-for m in updated:
-    print(f"+ {m[0]} : {m[1]} → {m[2]}")
+print("\n## === UPDATED MODS ===")
+if updated:
+    for m in updated:
+        print(f"+ {m[0]} : {m[1]} → {m[2]}")
+else:
+    print("No mods updated.")
 
-print("\n# === DEV NOTE ===")
+print("\n## === DEV NOTE ===")
 if dev_not_bool == True:
     print(dev_not)
 else :
